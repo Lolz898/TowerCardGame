@@ -1,9 +1,20 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class Unit : MonoBehaviour
 {
+    public enum UnitStatus
+    {
+        Idle,
+        MovingToNextWaypoint,
+        MovingToTarget,
+        AttackingTarget,
+        Dead
+    }
+
+    public UnitStatus currentStatus = UnitStatus.Idle; // Current status of the unit
     public int maxHP = 100;          // Maximum health points
     public int currentHP;           // Current health points
     public float movementSpeed = 5f; // Movement speed in units per second
@@ -20,12 +31,15 @@ public class Unit : MonoBehaviour
     private float timeSinceLastAttack; // Time elapsed since the last attack
 
     private UnitMovement unitMovement; // Reference to the UnitMovement script
+    private NavMeshAgent navMeshAgent;
 
     private void Awake()
     {
-        currentHP = maxHP;
-        timeSinceLastAttack = attackRate; // Initialize the time since last attack to the attack rate, so the unit can attack immediately if there is a target
         unitMovement = GetComponent<UnitMovement>();
+        navMeshAgent = GetComponent<NavMeshAgent>();
+        currentHP = maxHP;
+        navMeshAgent.speed = movementSpeed;
+        timeSinceLastAttack = attackRate; // Initialize the time since last attack to the attack rate, so the unit can attack immediately if there is a target
     }
 
     // Method to set the movement target for the unit
@@ -38,8 +52,8 @@ public class Unit : MonoBehaviour
     // Method to handle taking damage
     public virtual void TakeDamage(int damageAmount)
     {
-        Debug.Log(gameObject.name + "took " + damageAmount + " damage! Current HP: " + currentHP);
         currentHP -= damageAmount;
+        Debug.Log(gameObject.name + "took " + damageAmount + " damage! Current HP: " + currentHP);
         if (currentHP <= 0)
         {
             Die();
@@ -49,6 +63,9 @@ public class Unit : MonoBehaviour
     // Method to handle unit death
     public virtual void Die()
     {
+        currentStatus = UnitStatus.Dead;
+        CapsuleCollider collider = GetComponent<CapsuleCollider>();
+        collider.enabled = false;
         // Implement death logic here, such as awarding gold to the player
         // and destroying the GameObject.
         GameManager.Instance.AddGold(goldReward);
@@ -108,8 +125,13 @@ public class Unit : MonoBehaviour
             Unit target = FindClosestTarget();
             if (target != null)
             {
-                target.TakeDamage(attackDamage); // Use the attackDamage variable to deal damage
-                timeSinceLastAttack = 0f; // Reset the time since last attack
+                float distanceToTarget = Vector3.Distance(transform.position, target.transform.position);
+                if (distanceToTarget <= attackRange) // Check if the target is within attack range
+                {
+                    target.TakeDamage(attackDamage);
+                    timeSinceLastAttack = 0f; // Reset the time since last attack
+                }
+
             }
         }
     }
@@ -122,18 +144,30 @@ public class Unit : MonoBehaviour
         if (closestTarget != null)
         {
             float distanceToTarget = Vector3.Distance(transform.position, closestTarget.transform.position);
-            if (distanceToTarget <= sightRange && distanceToTarget > attackRange)
+            Debug.Log("Closest= " + closestTarget.name + " Distance= " + distanceToTarget + " Sight= " + sightRange + " Attack= " + attackRange);
+            if (distanceToTarget <= sightRange + 0.15f && distanceToTarget > attackRange)
             {
                 SetMovementTarget(closestTarget.transform); // Move towards the target
+                currentStatus = UnitStatus.MovingToTarget;
             }
             else
             {
                 unitMovement.StopMovement(); // Stop movement if within attack range
+                currentStatus = UnitStatus.AttackingTarget;
             }
         }
         else
         {
-            unitMovement.StopMovement(); // Stop movement if there is no target
+            if (isEnemy)
+            {
+                unitMovement.SetNextWaypoint(); // Resume waypoint following for enemy units
+                currentStatus = UnitStatus.MovingToNextWaypoint;
+            }
+            else
+            {
+                unitMovement.StopMovement(); // Stop movement if there is no target
+                currentStatus = UnitStatus.Idle;
+            }
         }
     }
 
