@@ -6,7 +6,7 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance; // Singleton instance of the GameManager
 
-    private int playerGold = 350; // Current amount of gold the player has
+    private int playerGold = 50; // Current amount of gold the player has
     private int playerHealth = 100; // Current health of the player
     private int playerMana = 4; // Current mana of the player
 
@@ -51,6 +51,13 @@ public class GameManager : MonoBehaviour
         return playerGold;
     }
 
+    // Method to set the player's gold
+    public void SetPlayerGold(int gold)
+    {
+        playerHealth = Mathf.Max(0, gold);
+        OnHealthUpdate?.Invoke(playerGold); // Notify listeners of gold update
+    }
+
     // Method to set the player's health
     public void SetPlayerHealth(int health)
     {
@@ -78,10 +85,16 @@ public class GameManager : MonoBehaviour
         OnManaUpdate?.Invoke(playerMana); // Notify listeners of mana update
     }
 
-    // Method to modify the player's mana (positive or negative)
-    public void ModifyPlayerMana(int amount)
+    public void AddMana(int amount)
     {
-        playerMana = Mathf.Max(0, playerMana + amount);
+        playerMana += amount;
+        OnManaUpdate?.Invoke(playerMana); // Notify listeners of mana update
+    }
+
+    // Method to remove mana from the player's balance
+    public void RemoveMana(int amount)
+    {
+        playerMana = Mathf.Max(0, playerMana - amount);
         OnManaUpdate?.Invoke(playerMana); // Notify listeners of mana update
     }
 

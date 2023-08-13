@@ -6,6 +6,7 @@ using UnityEngine;
 public class TowerCardScriptableObject : CardScriptableObject
 {
     // Add tower-specific attributes here
+    public GameObject towerPrefab;
     public float range;
     public int damage;
     public float fireRate;

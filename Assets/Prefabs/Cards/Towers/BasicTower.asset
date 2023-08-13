@@ -14,9 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardName: Basic Tower
   description: This is a basic tower, with no special attributes.
+  cardImage: {fileID: 21300000, guid: 5750454bc933a0a4f96bdd699ac42f84, type: 3}
   manaCost: 0
   goldCost: 50
   cardType: 0
+  towerPrefab: {fileID: 1328644093856016300, guid: c84a115821256d343966020b79bb3d7f, type: 3}
   range: 10
   damage: 10
   fireRate: 3
