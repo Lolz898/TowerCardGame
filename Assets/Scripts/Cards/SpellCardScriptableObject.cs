@@ -6,6 +6,11 @@ using UnityEngine;
 public class SpellCardScriptableObject : CardScriptableObject
 {
     // Add spell-specific attributes here
-    public string spellTarget;
-    public string spellEffect;
+    public GameObject spellPrefab;
+    public SpellTarget spellTarget;
+    public bool hitAlly;
+    public bool hitEnemy;
+    public bool hitTower;
+    public int damage;
+    public int range;
 }

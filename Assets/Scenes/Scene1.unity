@@ -4627,15 +4627,17 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 770b9f1370f618e4e90867251a6f85fc, type: 2}
   - {fileID: 11400000, guid: 770b9f1370f618e4e90867251a6f85fc, type: 2}
   - {fileID: 11400000, guid: 770b9f1370f618e4e90867251a6f85fc, type: 2}
-  - {fileID: 11400000, guid: 770b9f1370f618e4e90867251a6f85fc, type: 2}
+  - {fileID: 11400000, guid: e3bedeb38a8a2ab478d6e9048740abf7, type: 2}
   - {fileID: 11400000, guid: 5a138d0e8cb5843429826715632fde09, type: 2}
   - {fileID: 11400000, guid: 5a138d0e8cb5843429826715632fde09, type: 2}
   - {fileID: 11400000, guid: 5a138d0e8cb5843429826715632fde09, type: 2}
-  - {fileID: 11400000, guid: 5a138d0e8cb5843429826715632fde09, type: 2}
+  - {fileID: 11400000, guid: e3bedeb38a8a2ab478d6e9048740abf7, type: 2}
   playerHand: []
   discardPile: []
   uiCardPrefab: {fileID: 2092778174158512080, guid: a9815450a4d96ec4d82147f2746c0f8a, type: 3}
   cardContainer: {fileID: 1726470052}
+  rangeIndicator: {fileID: 8843802186469143392, guid: 694fd312e7afb8642839a483708b4684, type: 3}
+  overlapPadding: -8
 --- !u!1001 &1203677964
 PrefabInstance:
   m_ObjectHideFlags: 0

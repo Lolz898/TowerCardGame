@@ -73,7 +73,7 @@ public class CardUI : MonoBehaviour
         {
             Debug.Log("Not enough mana");
         }
-        else if (cardData.cardType == CardType.Tower) // Only towers can be clicked to play
+        else if (cardData.cardType == CardType.Tower || cardData.cardType == CardType.Spell) // Towers and spells can be played
         {
             // Call the PlayCard method from the CardManager and pass the index of this card
             cardManager.StartCardPlay(playerHandIndex);

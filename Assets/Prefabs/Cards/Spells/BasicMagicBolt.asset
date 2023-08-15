@@ -10,18 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 374bb71335d59944d8404181dbcf771b, type: 3}
-  m_Name: BasicFireball
+  m_Name: BasicMagicBolt
   m_EditorClassIdentifier: 
-  cardName: Basic Fireball
-  description: Basic spell that damages enemies in a radius of 3
+  cardName: Basic Magic Bolt
+  description: Basic spell that damages a single enemy
   cardImage: {fileID: 21300000, guid: 3abe23d1ea1df3a489b9cffc5d18bead, type: 3}
-  manaCost: 2
+  manaCost: 1
   goldCost: 0
   cardType: 1
-  spellPrefab: {fileID: 5736232839026425012, guid: 26929b9569ecf144baf6c6daaa49151f, type: 3}
-  spellTarget: 1
+  spellPrefab: {fileID: 5736232839026425012, guid: 908bd4d3b460ad24190f196c174ab6d3, type: 3}
+  spellTarget: 0
   hitAlly: 0
   hitEnemy: 1
   hitTower: 0
   damage: 10
-  range: 3
+  range: 0

@@ -5,10 +5,10 @@ using UnityEngine;
 public class Tower : MonoBehaviour
 {
     // Tower attributes
+    public float range = 5.0f;
     public int damage = 10;
     public float fireRate = 1.0f;
     public int goldCost = 50;
-    public float range = 5.0f;
 
     // Reference to the enemy currently targeted
     private Unit currentTarget;

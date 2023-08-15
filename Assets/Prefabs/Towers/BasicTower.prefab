@@ -50,7 +50,7 @@ MonoBehaviour:
   damage: 10
   fireRate: 1
   goldCost: 50
-  range: 5
+  range: 10
 --- !u!114 &9193285593851478321
 MonoBehaviour:
   m_ObjectHideFlags: 0

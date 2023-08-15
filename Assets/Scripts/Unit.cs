@@ -64,7 +64,7 @@ public class Unit : MonoBehaviour
     public virtual void Die()
     {
         currentStatus = UnitStatus.Dead;
-        CapsuleCollider collider = GetComponent<CapsuleCollider>();
+        Collider collider = GetComponent< Collider>();
         collider.enabled = false;
         // Implement death logic here, such as awarding gold to the player
         // and destroying the GameObject.
