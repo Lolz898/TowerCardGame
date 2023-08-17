@@ -1,10 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using TMPro;
 
-public class CardUI : MonoBehaviour
+public class CardUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
     public Image cardArtworkImage;
     public TextMeshProUGUI cardNameText;
@@ -12,15 +13,23 @@ public class CardUI : MonoBehaviour
     public TextMeshProUGUI manaCostText;
     public TextMeshProUGUI cardDescriptionText;
     public Image cardBackground;
+    public int playerHandIndex; // Index of the card in playerHand list
+    public static List<CardUI> cardUIs = new List<CardUI>();
+    public bool shouldMoveDownOnExit = true;
 
     private CardScriptableObject cardData;
-    public int playerHandIndex; // Index of the card in playerHand list
     private CardManager cardManager; // Reference to the CardManager instance
-    public static List<CardUI> cardUIs = new List<CardUI>();
+    private Vector3 originalPosition;
+    private bool updatePosition = true;
+    private Canvas cardCanvas;
+    private int originalSortingOrder;
+    private bool isHovering = false;
 
     private void Awake()
     {
         cardUIs.Add(this); // Add this instance to the list
+        cardCanvas = GetComponent<Canvas>();
+
     }
 
     public void Initialize(CardScriptableObject card, int handIndex, CardManager manager)
@@ -77,7 +86,104 @@ public class CardUI : MonoBehaviour
         {
             // Call the PlayCard method from the CardManager and pass the index of this card
             cardManager.StartCardPlay(playerHandIndex);
+            shouldMoveDownOnExit = !shouldMoveDownOnExit; // Toggle the value
+            foreach (CardUI cardui in CardUI.cardUIs)
+            {
+                if (cardui != this)
+                {
+                    cardui.ResetCardPosition(false);
+                }
+            }
         }
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (!isHovering)
+        {
+            updatePosition = false;
+            // Disable the HorizontalLayoutGroup
+            HorizontalLayoutGroup layoutGroup = GetComponentInParent<HorizontalLayoutGroup>();
+            if (layoutGroup != null)
+            {
+                layoutGroup.enabled = false;
+            }
+
+            if (cardCanvas != null)
+            {
+                cardCanvas.overrideSorting = true;
+                originalSortingOrder = cardCanvas.sortingOrder;
+                cardCanvas.sortingOrder = 10; // Set this to a value higher than other cards
+            }
+
+            Vector3 targetPosition = originalPosition + Vector3.up * 70f; // Adjust the hover distance
+            transform.localPosition = targetPosition;
+        }
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        if (shouldMoveDownOnExit)
+        {
+            bool shouldEnableLayoutGroup = true; // Default to enabling the layout group
+            foreach (CardUI cardui in cardUIs)
+            {
+                shouldEnableLayoutGroup = false; // If any cardui has shouldMoveDownOnExit == false, disable the layout group
+                break; // No need to check the rest, since one cardui is enough to disable the group
+            }
+
+            if (shouldEnableLayoutGroup)
+            {
+                // Enable the HorizontalLayoutGroup
+                HorizontalLayoutGroup layoutGroup = GetComponentInParent<HorizontalLayoutGroup>();
+                if (layoutGroup != null)
+                {
+                    layoutGroup.enabled = true;
+                }
+            }
+
+            if (cardCanvas != null)
+            {
+                cardCanvas.sortingOrder = originalSortingOrder;
+                cardCanvas.overrideSorting = false;
+            }
+
+            transform.localPosition = originalPosition;
+            StartCoroutine(HoverTimer());
+
+            updatePosition = true;
+        }
+    }
+
+    private IEnumerator HoverTimer()
+    {
+        isHovering = true;
+        yield return new WaitForSeconds(0.05f);
+        isHovering = false;
+    }
+
+    public void ResetCardPosition(bool LayoutGroup)
+    {
+        shouldMoveDownOnExit = true;
+
+        if (cardCanvas != null)
+        {
+            cardCanvas.sortingOrder = originalSortingOrder;
+            cardCanvas.overrideSorting = false;
+        }
+
+        transform.localPosition = originalPosition;
+
+        if (LayoutGroup)
+        {
+            HorizontalLayoutGroup layoutGroup = GetComponentInParent<HorizontalLayoutGroup>();
+            if (layoutGroup != null)
+            {
+                layoutGroup.enabled = true;
+            }
+        }
+
+        updatePosition = true;
     }
 
     public void DisableInteractions()   
@@ -91,4 +197,12 @@ public class CardUI : MonoBehaviour
     }
 
     // Add methods here for handling card interactions, such as clicking or dragging
+
+    private void Update()
+    {
+        if (updatePosition)
+        {
+            originalPosition = transform.localPosition; // Store the original position
+        }
+    }
 }

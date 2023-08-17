@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class CardManager : MonoBehaviour
@@ -18,6 +19,7 @@ public class CardManager : MonoBehaviour
 
     private bool isPlacingTower = false;
     private bool isPlacingSpell = false;
+    private int oldHandIndex = -1;
     private GameObject ghostTower;
     private GameObject spellRange;
     private GameObject towerPrefabToPlace; // Reference to the tower prefab to be placed
@@ -44,7 +46,6 @@ public class CardManager : MonoBehaviour
     {
         horizontalLayoutGroup = cardContainer.GetComponent<HorizontalLayoutGroup>();
 
-        DisplayDrawPile("Draw Pile at Start:");
         DrawInitialCards();
     }
 
@@ -78,14 +79,10 @@ public class CardManager : MonoBehaviour
             {
                 playerHand.Add(drawnCard);
 
-                DisplayDrawPile("Draw Pile:");
-
                 // Instantiate the UI card prefab and set its parent and position
                 GameObject uiCardObject = Instantiate(uiCardPrefab, cardContainer);
                 CardUI uiCard = uiCardObject.GetComponent<CardUI>();
                 uiCard.Initialize(drawnCard, playerHand.Count - 1, this); // Pass hand index and CardManager instance
-
-                AdjustHorizontalLayoutPadding();
             }
             else
             {
@@ -111,10 +108,24 @@ public class CardManager : MonoBehaviour
     {
         if (handIndex >= 0 && handIndex < playerHand.Count)
         {
-            cardToPlay = playerHand[handIndex];
-
-            Debug.Log("Playing card: " + cardToPlay.cardName);
-
+            if (oldHandIndex == handIndex)
+            {
+                oldHandIndex = -1;
+                CancelPlacement();
+                return;
+            }
+            else if (cardToPlay != null)
+            {
+                CancelPlacement();
+                cardToPlay = playerHand[handIndex];
+                oldHandIndex = handIndex;
+            }
+            else
+            {
+                cardToPlay = playerHand[handIndex];
+                oldHandIndex = handIndex;
+            }
+            
             activeCardUI = CardUI.cardUIs[handIndex];
 
             if (cardToPlay.cardType == CardType.Spell) // Check if the card is a spell card
@@ -130,14 +141,6 @@ public class CardManager : MonoBehaviour
         }
     }
 
-    private void DisplayDrawPile(string message)
-    {
-        for (int i = 0; i < drawPile.Count; i++)
-        {
-            Debug.Log(message + " Index: " + i + " - Card Name: " + drawPile[i].cardName);
-        }
-    }
-
     private void BeginTowerPlacement(TowerCardScriptableObject towerCard)
     {
         isPlacingTower = true;
@@ -148,11 +151,6 @@ public class CardManager : MonoBehaviour
 
         // Disable the ghost tower's collider so it doesn't interfere with placement
         ghostTower.GetComponent<Collider>().enabled = false;
-
-        foreach (CardUI cardUI in CardUI.cardUIs)
-        {
-            cardUI.DisableInteractions();
-        }
     }
 
     private void BeginSpellPlacement(SpellCardScriptableObject spellCard)
@@ -167,10 +165,21 @@ public class CardManager : MonoBehaviour
             spellRange = Instantiate(rangeIndicator, Input.mousePosition, Quaternion.identity);
             spellRange.transform.localScale = new Vector3(spellScript.range, 1, spellScript.range);
         }
+    }
 
-        foreach (CardUI cardUI in CardUI.cardUIs)
+    private void CancelPlacement()
+    {
+        isPlacingTower = false;
+        isPlacingSpell = false;
+        cardToPlay = null;
+        if (ghostTower != null)
         {
-            cardUI.DisableInteractions();
+            Destroy(ghostTower);
+        }
+        
+        if (spellRange != null)
+        {
+            Destroy(spellRange);
         }
     }
 
@@ -184,6 +193,10 @@ public class CardManager : MonoBehaviour
         // Check if the player has clicked to place the tower
         if (Input.GetMouseButtonDown(0))
         {
+            if (EventSystem.current.IsPointerOverGameObject())
+            {
+                return;
+            }
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
             if (Physics.Raycast(ray, out hit))
@@ -207,9 +220,13 @@ public class CardManager : MonoBehaviour
             spellRange.transform.position = mousePosition;
         }
 
-        // Check if the player has clicked to place the tower
+        // Check if the player has clicked to place the spell
         if (Input.GetMouseButtonDown(0))
         {
+            if (EventSystem.current.IsPointerOverGameObject())
+            {
+                return;
+            }
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
             if (Physics.Raycast(ray, out hit))
@@ -262,12 +279,6 @@ public class CardManager : MonoBehaviour
         // Clean up ghost tower and reset placement mode
         Destroy(ghostTower);
         isPlacingTower = false;
-
-        // Re-enable card interactions
-        foreach (CardUI cardUI in CardUI.cardUIs)
-        {
-            cardUI.EnableInteractions();
-        }
     }
 
     private void PlaceSpell(Vector3 location)
@@ -278,12 +289,6 @@ public class CardManager : MonoBehaviour
 
         Destroy(spellRange);
         isPlacingSpell = false;
-
-        // Re-enable card interactions
-        foreach (CardUI cardUI in CardUI.cardUIs)
-        {
-            cardUI.EnableInteractions();
-        }
     }
 
     private void CardPlayCleanup()
@@ -312,6 +317,13 @@ public class CardManager : MonoBehaviour
             Destroy(activeCardUI.gameObject);
             int destroyedHandIndex = activeCardUI.playerHandIndex;
             CardUI.cardUIs.Remove(activeCardUI);
+
+            HorizontalLayoutGroup layoutGroup = activeCardUI.GetComponentInParent<HorizontalLayoutGroup>();
+            if (layoutGroup != null)
+            {
+                layoutGroup.enabled = true;
+            }
+
             activeCardUI = null;
 
             for (int i = destroyedHandIndex; i < playerHand.Count; i++)
@@ -319,8 +331,8 @@ public class CardManager : MonoBehaviour
                 CardUI.cardUIs[i].UpdatePlayerHandIndex(i);
             }
         }
-
-        AdjustHorizontalLayoutPadding();
+        cardToPlay = null;
+        oldHandIndex = -1;
     }
 
     private void Update()
@@ -334,5 +346,7 @@ public class CardManager : MonoBehaviour
         {
             CheckSpellPlacement();
         }
+
+        AdjustHorizontalLayoutPadding();
     }
 }
